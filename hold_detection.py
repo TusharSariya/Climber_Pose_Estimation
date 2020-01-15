@@ -60,7 +60,7 @@ def highligh(image,color):
     #mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, np.ones((3,3),np.uint8),iterations=5)
     #mask = cv2.dilate(mask,np.ones((3,3),np.uint8),iterations = 5)
 
-    #image = cv2.cvtColor(hsv,cv2.COLOR_HSV2BGR)
+    image = cv2.cvtColor(hsv,cv2.COLOR_HSV2BGR)
     contours, hierarchy =  cv2.findContours(mask,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
     line_color = hsv2bgr(color*2,1,1)
     cv2.drawContours(image, contours, -1, line_color,2)
@@ -68,9 +68,7 @@ def highligh(image,color):
     
 
 image = cv2.imread('climbing_1.jpg')
-viewImage(image)
 image = cv2.pyrMeanShiftFiltering(image,15,30)
-viewImage(image)
 
 #viewImage(image)
 red = 0
