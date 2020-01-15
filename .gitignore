@@ -4,4 +4,5 @@ pose/*
 *.jpeg
 *.mp4
 *.html
-env3
+env
+.vscode

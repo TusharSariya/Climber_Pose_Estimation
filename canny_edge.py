@@ -26,5 +26,5 @@ if src is None:
 src_gray = cv.cvtColor(src, cv.COLOR_BGR2GRAY)
 cv.namedWindow(window_name)
 cv.createTrackbar(title_trackbar, window_name , 0, max_lowThreshold, CannyThreshold)
-CannyThreshold(0)
+CannyThreshold(20)
 cv.waitKey()
