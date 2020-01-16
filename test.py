@@ -15,7 +15,7 @@ def main():
     #hsv color of holds
     red = 0
     yellow = 20
-    green = 65
+    green = 70
     blue = 100
     purple = 120
     black = 0
@@ -144,16 +144,49 @@ def det_pose(image):
             i = 0
     return points
 
+#this was actually insane
 def det_climbing_route(image,hold_masks,pose_points,colors):
-    i = 0
+    iter = 0
+    #iterate through all masks
     for mask in hold_masks:
-        contours, hierarchy =  cv2.findContours(mask,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
-        line_color = hsv2bgr(colors[i]*2,1,1)
+        contours, hierarchy =  cv2.findContours(mask,cv2.RETR_CCOMP,cv2.CHAIN_APPROX_SIMPLE)
+        #find max and min values of contour
+        #iterate through each contour 
+        for contour in contours:
+            x_max = 0
+            y_max = 0
+            x_min = 3000
+            y_min = 3000
+            #iterate through points in contour
+            for point in contour:
+                point = point[0:1][0][0:2]
+                if point[0] < x_min : x_min = point[0]
+                if point[0] > x_max : x_max = point[0]
+                if point[1] < y_min : y_min = point[1]
+                if point[1] > y_max : y_max = point[1]
+                #cv2.circle(frameCopy, (int(x), int(y)), 8, (0, 255, 255), thickness=-1, lineType=cv2.FILLED)
+            cv2.rectangle(image,(x_min,y_min),(x_max,y_max),(0,0,255),1)
+            #iterate through all pose points
+            for point in pose_points:
+                #delete contour of overlap with pose
+                if(point[0]>x_min and point[0]<x_max and point[1]>y_min and point[1<y_max]):
+                    #https://stackoverflow.com/questions/53065245/test-if-a-numpy-array-is-a-member-of-a-list-of-numpy-arrays-and-remove-it-from
+                    index = get_index(contour,contours)
+                    del contours[index]
+                    break
+        line_color = hsv2bgr(colors[iter]*2,1,1)
         cv2.drawContours(image, contours, -1, line_color,2)
-        i = i + 1
+        iter = iter + 1
     for point in pose_points:
         cv2.circle(image, point, 8, (0, 255, 255), thickness=-1, lineType=cv2.FILLED)
     return image
+
+def get_index(array, list_of_arrays):
+    for j, a in enumerate(list_of_arrays):
+        if np.array_equal(array, a):
+            return j
+    return None
+
 
 def viewImage(image):
     cv2.namedWindow('Display', cv2.WINDOW_NORMAL)
