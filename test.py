@@ -14,14 +14,14 @@ import time
 def main():
     #hsv color of holds
     red = 0
-    yellow = 20
+    yellow = 25
     green = 70
     blue = 100
     purple = 120
     black = 0
     colors = [red,yellow,green,blue,purple]
 
-    image = cv2.imread('climbing_10.jpg')
+    image = cv2.imread('climbing_5.jpg')
     manipulate(image)
     hold_masks = det_holds(image,colors)
     pose_points = det_pose(image)
@@ -31,8 +31,7 @@ def main():
 
 def manipulate(image):
     image = cv2.pyrMeanShiftFiltering(image,15,30)
-    viewImage(image)
-    
+
 def det_holds(image,colors):
     
 
@@ -65,7 +64,7 @@ def det_holds(image,colors):
             mask = cv2.inRange(hsv, lower, upper)
 
         # Refining the mask corresponding to the detected red color
-        mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, np.ones((3,3),np.uint8),iterations=5)
+        mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, np.ones((3,3),np.uint8),iterations=2)
         masks.append(mask)
         #apply contours
         #contours, hierarchy =  cv2.findContours(mask,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
@@ -136,12 +135,21 @@ def det_climbing_route(image,hold_masks,pose_points,colors):
     iter = 0
     hold_rect = []
     hold_rect.append([])
+
     #iterate through all masks
     for mask in hold_masks:
         contours, hierarchy =  cv2.findContours(mask,cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
+
+
+        filtered_contours = []
+        for contour in contours:
+            area = cv2.contourArea(contour)
+            if area > 100 and area < 10000:
+                filtered_contours.append(contour)
+
         #find max and min values of contour
         #iterate through each contour 
-        for contour in contours:
+        for contour in filtered_contours:
             x_max = 0
             y_max = 0
             x_min = 3000
@@ -163,11 +171,11 @@ def det_climbing_route(image,hold_masks,pose_points,colors):
                 #delete contour of overlap with pose
                 if(point[0]>x_min and point[0]<x_max and point[1]>y_min and point[1]<y_max):
                     #cv2.rectangle(image,(x_min,y_min),(x_max,y_max),(0,0,255),1)
-                    index = get_index(contour,contours)
-                    del contours[index]
+                    index = get_index(contour,filtered_contours)
+                    del filtered_contours[index]
                     break
         line_color = hsv2bgr(colors[iter]*2,1,1)
-        cv2.drawContours(image, contours, -1, line_color,2)
+        cv2.drawContours(image, filtered_contours, -1, line_color,2)
         iter += 1
     #4.7.10.13
     for point in pose_points:
