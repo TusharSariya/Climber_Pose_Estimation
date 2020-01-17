@@ -23,7 +23,9 @@ if src is None:
     print('Could not open or find the image: ', args.input)
     exit(0)
 
+src = cv.pyrMeanShiftFiltering(src,15,30)
 src_gray = cv.cvtColor(src, cv.COLOR_BGR2GRAY)
+
 cv.namedWindow(window_name)
 cv.createTrackbar(title_trackbar, window_name , 0, max_lowThreshold, CannyThreshold)
 CannyThreshold(20)

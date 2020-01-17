@@ -21,7 +21,7 @@ def main():
     black = 0
     colors = [red,yellow,green,blue,purple]
 
-    image = cv2.imread('climbing_1.jpg')
+    image = cv2.imread('climbing_10.jpg')
     manipulate(image)
     hold_masks = det_holds(image,colors)
     pose_points = det_pose(image)
@@ -31,7 +31,8 @@ def main():
 
 def manipulate(image):
     image = cv2.pyrMeanShiftFiltering(image,15,30)
-
+    viewImage(image)
+    
 def det_holds(image,colors):
     
 
@@ -45,11 +46,11 @@ def det_holds(image,colors):
             # Range for lower red
             
             lower = np.array([0,saturation,value])
-            upper = np.array([variance,255,255])
+            upper = np.array([5,255,255])
             mask1 = cv2.inRange(hsv, lower, upper)
             
             # Range for upper range
-            lower = np.array([180-variance,saturation,value])
+            lower = np.array([180-5,saturation,value])
             upper = np.array([180,255,255])
             mask2 = cv2.inRange(hsv,lower,upper)
             
@@ -64,8 +65,8 @@ def det_holds(image,colors):
             mask = cv2.inRange(hsv, lower, upper)
 
         # Refining the mask corresponding to the detected red color
-        mask_final = cv2.morphologyEx(mask, cv2.MORPH_OPEN, np.ones((3,3),np.uint8),iterations=5)
-        masks.append(mask_final)
+        mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, np.ones((3,3),np.uint8),iterations=5)
+        masks.append(mask)
         #apply contours
         #contours, hierarchy =  cv2.findContours(mask,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
         #line_color = hsv2bgr(color*2,1,1)
@@ -125,31 +126,19 @@ def det_pose(image):
         y = (frameHeight * point[1]) / H
 
         if prob > threshold :
-            #cv2.circle(frameCopy, (int(x), int(y)), 8, (0, 255, 255), thickness=-1, lineType=cv2.FILLED)
-            #cv2.putText(frameCopy, "{}".format(i), (int(x), int(y)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, lineType=cv2.LINE_AA)
-
-            # Add the point to the list if the probability is greater than the threshold
             points.append((int(x), int(y)))
         else :
             points.append(None)
-
-    # Draw Skeleton
-    for pair in POSE_PAIRS:
-        partA = pair[0]
-        partB = pair[1]
-
-        if points[partA] and points[partB]:
-            #cv2.line(frame, points[partA], points[partB], (0, 255, 255), 2)
-            #cv2.circle(frame, points[partA], 8, (0, 0, 255), thickness=-1, lineType=cv2.FILLED)
-            i = 0
     return points
 
 #this was actually insane
 def det_climbing_route(image,hold_masks,pose_points,colors):
     iter = 0
+    hold_rect = []
+    hold_rect.append([])
     #iterate through all masks
     for mask in hold_masks:
-        contours, hierarchy =  cv2.findContours(mask,cv2.RETR_CCOMP,cv2.CHAIN_APPROX_SIMPLE)
+        contours, hierarchy =  cv2.findContours(mask,cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
         #find max and min values of contour
         #iterate through each contour 
         for contour in contours:
@@ -164,23 +153,29 @@ def det_climbing_route(image,hold_masks,pose_points,colors):
                 if point[0] > x_max : x_max = point[0]
                 if point[1] < y_min : y_min = point[1]
                 if point[1] > y_max : y_max = point[1]
-                #cv2.circle(frameCopy, (int(x), int(y)), 8, (0, 255, 255), thickness=-1, lineType=cv2.FILLED)
-            cv2.rectangle(image,(x_min,y_min),(x_max,y_max),(0,0,255),1)
-            #iterate through all pose points
-            for point in pose_points:
+            '''extLeft = tuple(contour[contour[:, :, 0].argmin()][0])
+            extRight = tuple(contour[contour[:, :, 0].argmax()][0])
+            extTop = tuple(contour[contour[:, :, 1].argmin()][0])
+            extBot = tuple(contour[contour[:, :, 1].argmax()][0])'''
+            #iterate through all torso and knees and delete if overlap
+            for p in [2,5,8,9,11,12,14]:
+                point = pose_points[p]
                 #delete contour of overlap with pose
-                if(point[0]>x_min and point[0]<x_max and point[1]>y_min and point[1<y_max]):
-                    #https://stackoverflow.com/questions/53065245/test-if-a-numpy-array-is-a-member-of-a-list-of-numpy-arrays-and-remove-it-from
+                if(point[0]>x_min and point[0]<x_max and point[1]>y_min and point[1]<y_max):
+                    #cv2.rectangle(image,(x_min,y_min),(x_max,y_max),(0,0,255),1)
                     index = get_index(contour,contours)
                     del contours[index]
                     break
         line_color = hsv2bgr(colors[iter]*2,1,1)
         cv2.drawContours(image, contours, -1, line_color,2)
-        iter = iter + 1
+        iter += 1
+    #4.7.10.13
     for point in pose_points:
+        #check for surrounding holds
         cv2.circle(image, point, 8, (0, 255, 255), thickness=-1, lineType=cv2.FILLED)
     return image
 
+#https://stackoverflow.com/questions/53065245/test-if-a-numpy-array-is-a-member-of-a-list-of-numpy-arrays-and-remove-it-from
 def get_index(array, list_of_arrays):
     for j, a in enumerate(list_of_arrays):
         if np.array_equal(array, a):
