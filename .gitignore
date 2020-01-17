@@ -1,5 +1,5 @@
 
-pose/*
+*.caffemodel
 *.jpg
 *.jpeg
 *.mp4
