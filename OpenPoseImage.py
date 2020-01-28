@@ -16,8 +16,12 @@ elif MODE is "MPI" :
     nPoints = 15
     POSE_PAIRS = [[0,1], [1,2], [2,3], [3,4], [1,5], [5,6], [6,7], [1,14], [14,8], [8,9], [9,10], [14,11], [11,12], [12,13] ]
 
+right_arm = [4,3,2]
+left_arm = [7,6,5]
+right_leg = [10,9,8]
+left_leg = [13,12,11]
 
-frame = cv2.imread("single.jpeg")
+frame = cv2.imread("climbing_2.jpg")
 frameCopy = np.copy(frame)
 frameWidth = frame.shape[1]
 frameHeight = frame.shape[0]

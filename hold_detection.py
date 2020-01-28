@@ -67,7 +67,7 @@ def highligh(image,color):
     viewImage(image) ## 5
     
 
-image = cv2.imread('climbing_1.jpg')
+image = cv2.imread('climbing_2.jpg')
 image = cv2.pyrMeanShiftFiltering(image,15,30)
 
 #viewImage(image)
