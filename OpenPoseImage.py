@@ -16,13 +16,11 @@ elif MODE is "MPI" :
     nPoints = 15
     POSE_PAIRS = [[0,1], [1,2], [2,3], [3,4], [1,5], [5,6], [6,7], [1,14], [14,8], [8,9], [9,10], [14,11], [11,12], [12,13] ]
 
-right_arm = [4,3,2]
-left_arm = [7,6,5]
-right_leg = [10,9,8]
-left_leg = [13,12,11]
+JOINTS = [[4,3,2], [7,6,5], [10,9,8], [13,12,11]]
 
 frame = cv2.imread("climbing_2.jpg")
 frameCopy = np.copy(frame)
+frameCopy2 = np.copy(frame)
 frameWidth = frame.shape[1]
 frameHeight = frame.shape[0]
 threshold = 0.1
@@ -76,6 +74,18 @@ for pair in POSE_PAIRS:
         cv2.line(frame, points[partA], points[partB], (0, 255, 255), 2)
         cv2.circle(frame, points[partA], 8, (0, 0, 255), thickness=-1, lineType=cv2.FILLED)
 
+#draw angles
+for joint in JOINTS:
+    A = np.array(points[joint[0]])
+    B = np.array(points[joint[1]])
+    C = np.array(points[joint[2]])
+    AB = B - A
+    BC = C - B
+    dot_prod = np.dot(AB,BC)
+    mag = np.linalg.norm(AB)*np.linalg.norm(BC)
+    angle = np.arccos(dot_prod/mag)
+    cv2.putText(frame, "{}".format(angle*180/3.14), (int(B[0]), int(B[1])), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, lineType=cv2.LINE_AA)
+    print(angle)
 
 cv2.imshow('Output-Keypoints', frameCopy)
 cv2.imshow('Output-Skeleton', frame)

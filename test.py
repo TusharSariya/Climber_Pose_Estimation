@@ -17,11 +17,11 @@ def main():
     yellow = 25
     green = 70
     blue = 100
-    purple = 120
+    purple = 122.5
     black = 0
     colors = [red,yellow,green,blue,purple]
 
-    image = cv2.imread('climbing_5.jpg')
+    image = cv2.imread('climbing_2.jpg')
     manipulate(image)
     hold_masks = det_holds(image,colors)
     pose_points = det_pose(image)
